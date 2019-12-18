@@ -3,12 +3,18 @@
 
 #include <QMainWindow>
 #include <QDebug>
+#include <QtSerialPort/QserialPort>
+#include <QtSerialPort/QSerialPortInfo>
+#include <QTimer>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <QImage>
 #include <QPixmap>
 #include <QCloseEvent>
 #include <QMessageBox>
+#include <QTcpSocket>
+#include <QBuffer>
+#include <qstring.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
@@ -39,6 +45,11 @@ private:
 
 	QGraphicsPixmapItem pixmap;
 	cv::VideoCapture video;
+
+	QTcpSocket* imageTcpSocket;
+	QByteArray imageData;
+
+	QSerialPort* port;
 
 };
 

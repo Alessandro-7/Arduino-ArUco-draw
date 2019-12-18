@@ -1,5 +1,5 @@
 /********************************************************************************
-** Form generated from reading UI file 'mainwindow.ui'
+** Form generated from reading UI file 'MainWindow.ui'
 **
 ** Created by: Qt User Interface Compiler version 5.9.8
 **
@@ -30,11 +30,12 @@ class Ui_MainWindow
 public:
     QWidget *centralWidget;
     QGridLayout *gridLayout;
+    QGraphicsView *graphicsView;
     QHBoxLayout *horizontalLayout;
     QLabel *label;
     QLineEdit *videoEdit;
     QPushButton *startBtn;
-    QGraphicsView *graphicsView;
+    QLabel *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -47,6 +48,11 @@ public:
         gridLayout->setSpacing(6);
         gridLayout->setContentsMargins(11, 11, 11, 11);
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
+        graphicsView = new QGraphicsView(centralWidget);
+        graphicsView->setObjectName(QStringLiteral("graphicsView"));
+
+        gridLayout->addWidget(graphicsView, 0, 0, 1, 1);
+
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setSpacing(6);
         horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
@@ -68,10 +74,10 @@ public:
 
         gridLayout->addLayout(horizontalLayout, 1, 0, 1, 1);
 
-        graphicsView = new QGraphicsView(centralWidget);
-        graphicsView->setObjectName(QStringLiteral("graphicsView"));
+        statusBar = new QLabel(centralWidget);
+        statusBar->setObjectName(QStringLiteral("statusBar"));
 
-        gridLayout->addWidget(graphicsView, 0, 0, 1, 1);
+        gridLayout->addWidget(statusBar, 2, 0, 1, 1);
 
         MainWindow->setCentralWidget(centralWidget);
 
@@ -82,9 +88,10 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "Video Processor", Q_NULLPTR));
-        label->setText(QApplication::translate("MainWindow", "File Path / RTSP Url / Camera Index :", Q_NULLPTR));
+        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "Drawing", Q_NULLPTR));
+        label->setText(QApplication::translate("MainWindow", "Camera Index :", Q_NULLPTR));
         startBtn->setText(QApplication::translate("MainWindow", "Start", Q_NULLPTR));
+        statusBar->setText(QApplication::translate("MainWindow", "STATUS:", Q_NULLPTR));
     } // retranslateUi
 
 };
