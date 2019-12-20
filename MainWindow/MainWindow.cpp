@@ -47,6 +47,11 @@ cv::Scalar checkColor(cv::Scalar currColor, std::vector< std::vector< cv::Point2
 	return currColor;
 }
 
+void updateThickness(int& thickness, cv::Mat& thicknessLay, int i) {
+	thickness = i;
+	thicknessLay = cv::Mat(cv::Size(640, 480), CV_8UC3, cv::Scalar(0));
+}
+
 
 MainWindow::MainWindow(QWidget* parent) :
 	QMainWindow(parent),
@@ -127,6 +132,8 @@ void MainWindow::on_startBtn_pressed()
 
 	// слой с тремя квадратами цветом
 	cv::Mat overLay = cv::Mat(Size(640, 480), CV_8UC3, Scalar(0));
+	cv::Mat thicknessLay = cv::Mat(Size(640, 480), CV_8UC3, Scalar(0));
+
 	bool isCorner = false;
 
 	// вектор для хранения положений маркеров на пердыдущем кадре
@@ -134,6 +141,7 @@ void MainWindow::on_startBtn_pressed()
 
 	// текущий цвет рисования
 	cv::Scalar drawColor = Scalar(0, 0, 255);
+	int thickness = 2;
 
 	// кадр с камеры
 	cv::Mat frame;
@@ -191,10 +199,19 @@ void MainWindow::on_startBtn_pressed()
 
 				// проверяем, есть ли у нас id=1 маркер, и есть ли вообще id=0, чтобы рисовать
 				for (int i = 0; i < ids.size(); ++i) {
-					if (ids[i] == 1)
-						isFirstAruco = true;
 					if (ids[i] == 0)
 						zeroAruco = i;
+					if (ids[i] == 1)
+						isFirstAruco = true;
+					
+
+					if (ids[i] == 2)
+						updateThickness(thickness, thicknessLay, 2);
+					if (ids[i] == 3)
+						updateThickness(thickness, thicknessLay, 12);
+					if (ids[i] == 4)
+						updateThickness(thickness, thicknessLay, 22);
+
 				}
 
 				// каждый раз смотрим, какой у нас цвет активен
@@ -208,21 +225,27 @@ void MainWindow::on_startBtn_pressed()
 				if (isCorner && corners.size() > 0 && isFirstAruco && zeroAruco != -1) {
 					line(drawingLayer, getCenter(prevCorners),
 						getCenter(corners, zeroAruco),
-						drawColor, 5, 8);
+						drawColor, thickness, 8);
 					sendingData = true;
 				}
 
-				// обновляем вектор предыдущий положений маркера prevCorners
+				// обновляем вектор предыдущих положений маркера prevCorners
 				if (zeroAruco != -1) {
 					prevCorners = corners[zeroAruco];
 					if (isFirstAruco)
 						isCorner = true;
 				}
+				
+		
 			}
 
+			// рисуем линию текущего цвета и толщины
+			line(thicknessLay, cv::Point(605, 450), cv::Point(605, 400),
+				drawColor, thickness, 8);
 			// сводим всё в одну картинку
 			cv::add(drawingLayer, frame, frame);
 			//cv::addWeighted(overLay, 1.0, frame, 1.0, 0.0, frame);
+			cv::add(thicknessLay, frame, frame);
 			cv::add(overLay, frame, frame);
 
 
