@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "x64\Debug\uic\ui_MainWindow.h"
-
 #include<mainwindow.h>
 
 static bool readCameraParameters(std::string filename, cv::Mat& camMatrix, cv::Mat& distCoeffs) {
@@ -61,7 +60,7 @@ MainWindow::MainWindow(QWidget* parent) :
 
 	ui->graphicsView->setScene(new QGraphicsScene(this));
 	ui->graphicsView->scene()->addItem(&pixmap);
-	port = new QSerialPort("COM1");
+	port = new QSerialPort("COM4");
 	if (port->open(QIODevice::ReadWrite))
 	{
 		port->setBaudRate(QSerialPort::Baud9600);
@@ -156,7 +155,7 @@ void MainWindow::on_startBtn_pressed()
 	cv::rectangle(overLay, colors[2].second.first, colors[2].second.second, colors[2].first, FILLED, 8);
 
 
-	char id = 0;
+	char id = 7;
 	cv::Point xy;
 	
 
@@ -205,13 +204,15 @@ void MainWindow::on_startBtn_pressed()
 					if (ids[i] == 1)
 						isFirstAruco = true;
 					
-
+					// регулируем толщину
 					if (ids[i] == 2)
 						updateThickness(thickness, thicknessLay, 2);
 					if (ids[i] == 3)
-						updateThickness(thickness, thicknessLay, 12);
+						updateThickness(thickness, thicknessLay, 7);
 					if (ids[i] == 4)
-						updateThickness(thickness, thicknessLay, 22);
+						updateThickness(thickness, thicknessLay, 14);
+
+					// очищаем область рисования
 					if (ids[i] == 5)
 						drawingLayer = Mat(Size(640, 480), CV_8UC3, Scalar(0));
 
@@ -260,7 +261,7 @@ void MainWindow::on_startBtn_pressed()
 				QImage::Format_RGB888);
 			pixmap.setPixmap(QPixmap::fromImage(qimg.rgbSwapped()));
 			ui->graphicsView->fitInView(&pixmap, Qt::KeepAspectRatio);
-
+		
 			////////////////////////////////////////////////////////////////////////
 			imageTcpSocket = new QTcpSocket();
 			imageTcpSocket->abort();
@@ -274,15 +275,16 @@ void MainWindow::on_startBtn_pressed()
 
 
 
-			if (port->isOpen())
-			{
+			if (port->isOpen()) {
 				char xHigh = (xy.x & 0xFF00) >> 8;
 				char xLow = (xy.x & 0x00FF);
 				char yHigh = (xy.y & 0xFF00) >> 8;
 				char yLow = (xy.y & 0x00FF);
-
-				char buf[14] = { id, xHigh, xLow, yHigh, yLow,  'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
-				port->write(buf, 14);
+				char color = drawColor.val[0] / 255 + drawColor.val[1] / 255 * 2 +
+								drawColor.val[2] / 255 * 3;
+				char buf[16] = { id, xLow, xHigh, yLow, yHigh, flag, color, thickness,
+								'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
+				port->write(buf, 16);
 			}
 
 			
