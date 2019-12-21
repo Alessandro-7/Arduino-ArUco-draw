@@ -52,7 +52,7 @@ void updateThickness(int& thickness, cv::Mat& thicknessLay, int i) {
 	thicknessLay = cv::Mat(cv::Size(640, 480), CV_8UC3, cv::Scalar(0));
 }
 
-
+//////////////////////////////////////////////////////////////////////////////
 MainWindow::MainWindow(QWidget* parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
@@ -107,7 +107,7 @@ void MainWindow::on_startBtn_pressed()
 	}
 	
 	ui->startBtn->setText("Stop");
-	ui->statusBar->setText("Test");
+	
 	int dictionaryId = 0;
 	bool showRejected = false;
 	float markerLength = 0.1;
@@ -155,11 +155,16 @@ void MainWindow::on_startBtn_pressed()
 	cv::rectangle(overLay, colors[1].second.first, colors[1].second.second, colors[1].first, FILLED, 8);
 	cv::rectangle(overLay, colors[2].second.first, colors[2].second.second, colors[2].first, FILLED, 8);
 
+
+	char id = 0;
+	cv::Point xy;
+	
+
 	// читаем видео
 	while (video.isOpened())
 
 	{
-		bool sendingData = false;
+		char flag = 0;
 		video >> frame;
 		if (!frame.empty())
 		{
@@ -176,22 +181,18 @@ void MainWindow::on_startBtn_pressed()
 					tvecs);
 
 
-			// уберЄм потом. ѕока просто дл€ нагл€дности
+			
 			if (ids.size() > 0) {
 				aruco::drawDetectedMarkers(frame, corners, ids);
-
+				/*
 				if (estimatePose) {
 					for (unsigned int i = 0; i < ids.size(); i++)
 						aruco::drawAxis(frame, camMatrix, distCoeffs, rvecs[i], tvecs[i],
 							markerLength * 0.5f);
 				}
+				*/
 			}
-
-			/*¬от тут уже мутно. –исуем маркером с id=0 только тогда, когда в кадре
-			есть маркер с id=1. “о есть выходит, что нулевой маркер "карандаш", а первый Ц 
-			нажимаем мы на него или же просто водим.
-			—делано это, например, чтобы выбирать нулевым цвета и ничего не рисовать в
-			это врем€. Ќу и просто нагл€дно водить им по экрану без отрисовки.*/
+			
 
 			if (corners.size() > 0) {
 				bool isFirstAruco = false;
@@ -211,26 +212,28 @@ void MainWindow::on_startBtn_pressed()
 						updateThickness(thickness, thicknessLay, 12);
 					if (ids[i] == 4)
 						updateThickness(thickness, thicknessLay, 22);
+					if (ids[i] == 5)
+						drawingLayer = Mat(Size(640, 480), CV_8UC3, Scalar(0));
 
 				}
 
-				// каждый раз смотрим, какой у нас цвет активен
-				if (zeroAruco != -1)
-					drawColor = checkColor(drawColor, corners, colors, zeroAruco);
-
-				/* ≈сли всЄ на месте, то рисуем линию межу положением id=0 маркера на прошлом
-				кадре, и на текущем.
-				isCorner служит дл€ того, чтобы в самый первый кадр у нас ничего не сломалось
-				*/
-				if (isCorner && corners.size() > 0 && isFirstAruco && zeroAruco != -1) {
-					line(drawingLayer, getCenter(prevCorners),
-						getCenter(corners, zeroAruco),
-						drawColor, thickness, 8);
-					sendingData = true;
-				}
-
-				// обновл€ем вектор предыдущих положений маркера prevCorners
+				
 				if (zeroAruco != -1) {
+
+					xy = getCenter(corners, zeroAruco);
+					drawColor = checkColor(drawColor, corners, colors, zeroAruco);
+					cv:circle(frame, xy, thickness / 2, drawColor, FILLED);
+
+					/* ≈сли всЄ на месте, то рисуем линию межу положением id=0 маркера на прошлом
+					кадре, и на текущем.
+					isCorner служит дл€ того, чтобы в самый первый кадр у нас ничего не сломалось
+					*/
+					if (isCorner && isFirstAruco) {
+						line(drawingLayer, getCenter(prevCorners), xy, drawColor, thickness, 8);
+						flag = 1;
+					}
+
+					// обновл€ем вектор предыдущих положений маркера prevCorners
 					prevCorners = corners[zeroAruco];
 					if (isFirstAruco)
 						isCorner = true;
@@ -269,10 +272,16 @@ void MainWindow::on_startBtn_pressed()
 			imageTcpSocket->write(ba);
 			/////////////////////////////////////////////////////////////////////////
 
+
+
 			if (port->isOpen())
 			{
-				char buf[14] = { 0, 22, 22, 33, 33, 111, 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
-				char hj[] = { '2' };
+				char xHigh = (xy.x & 0xFF00) >> 8;
+				char xLow = (xy.x & 0x00FF);
+				char yHigh = (xy.y & 0xFF00) >> 8;
+				char yLow = (xy.y & 0x00FF);
+
+				char buf[14] = { id, xHigh, xLow, yHigh, yLow,  'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
 				port->write(buf, 14);
 			}
 
